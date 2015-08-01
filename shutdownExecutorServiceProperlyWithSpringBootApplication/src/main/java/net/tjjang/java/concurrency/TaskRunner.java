@@ -20,6 +20,10 @@ public class TaskRunner {
 	private CompletionService<Boolean> completionService;
 	private int numberOfThread;
 
+	public TaskRunner() {
+		this(5);
+	}
+
 	public TaskRunner(int n) {
 		numberOfThread = n;
 	}
@@ -33,50 +37,57 @@ public class TaskRunner {
 
 	@PreDestroy
 	public void destroy() {
-		System.out.println("Clear-up taskRunner");
+		System.out.println("Clear taskRunner");
 		if (executor == null)
 			return;
 		if (executor.isShutdown())
 			return;
 
-		List<Runnable> neverCommenced = executor.shutdownNow();
-		System.out.println(format("Never commenced tasks:%s",neverCommenced));
-		try {
-			executor.awaitTermination(3, TimeUnit.SECONDS);
-		} catch (InterruptedException ignore) {
+		executor.shutdownNow();
+		while(!executor.isTerminated()){
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException ignore) {
+			}
 		}
+		System.out.println("Cleared taskRunner");
 	}
 
 	public void process(int count) {
 		List<Future<Boolean>> futures = new ArrayList<>(count);
-		System.out.println("-> Start to submit");
+		System.out.println("Start process");
 		int submitted = 0;
 		while (--count > 0) {
 			submitted++;
 			Future<Boolean> queued = completionService.submit(new Callable<Boolean>() {
-				@Override public Boolean call() throws Exception {
-					System.out.println(format("-> a task(%s) on %s", this, Thread.currentThread().getName()));
-					Thread.sleep(5000);
-					System.out.println(format("<- a task(%s) on %s", this, Thread.currentThread().getName()));
+				@Override public Boolean call(){
+					System.out.println(format("->-> a task(%s) on %s", this, Thread.currentThread().getName()));
+					try {
+						Thread.sleep(100000);
+					} catch (InterruptedException e) {
+						System.out.println(format("<-<- a task(%s) has get interrupted", this));
+						return false;
+					}
+					System.out.println(format("<-<- a task(%s) has been done on %s", this));
 					return true;
 				}
 			});
 			futures.add(queued);
 		}
-		System.out.println(format("<- Submit completed : %s.", submitted));
-
+		System.out.println(format("Submit completed : %s.", submitted));
 		System.out.println("-> Waits for the tasks to be completed");
 		Random random = new Random();
 		while (true) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			} catch (Exception ignore) {
 			}
-			if (!random.nextBoolean()) {
-				System.out.println("<- Stop waiting");
+			System.out.println(".");
+			if (random.nextInt()%20==0) {
+				System.out.println("<- Stop waiting, stop sign arrived.");
 				break;
 			}
 		}
-
+		System.out.println("End process");
 	}
 }

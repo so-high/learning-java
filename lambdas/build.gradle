@@ -1,0 +1,5 @@
+group = 'net.tjjang.learn.java.functional'
+version = '0.0.1'
+description = ""
+
+apply plugin: 'java'

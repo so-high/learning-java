@@ -47,7 +47,7 @@ public class LambdaExpressionSyntaxesLearningTest {
 	}
 
 	@Test
-	public void yesButHaveFollowTheRulesOfMethodSignature(){
+	public void seemsYesSoNaturallyHaveToHaveConsistentMethodSignature(){
 		Runnable runnableFromLambda = () -> {
 			try {
 				sleep(10);
@@ -55,6 +55,7 @@ public class LambdaExpressionSyntaxesLearningTest {
 				//Can't throw Checked Exception as Runnable::run method doesn't have throws definition.
 			}
 		};
+
 		Callable<?> callableFromLambda = () -> {Thread.sleep(10);return null;};
 	}
 

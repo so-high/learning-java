@@ -1,0 +1,9 @@
+group = 'net.tjjang.learn.java.concurrency'
+version = '0.0.1'
+description = ""
+
+apply plugin: 'java'
+
+dependencies {
+	compile "org.springframework.boot:spring-boot-starter-web:1.2.5.RELEASE"
+}

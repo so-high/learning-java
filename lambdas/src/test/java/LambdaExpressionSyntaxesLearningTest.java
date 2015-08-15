@@ -33,14 +33,14 @@ public class LambdaExpressionSyntaxesLearningTest {
 
 	@Test
 	public void isLambdaExpressionJustSyntacticSugarForAnonymousImplementation(){
-		Comparator lambdaExpressionInstance = LambdaExpressionDiscloser.disclose(
+		Comparator lambdaExpressionInstance = LambdaExpressionDiscloser.discloseWithComparator(
 			(Integer first, Integer second) -> Integer.compare(first, second));
-		Comparator anonymousComparatorInstance= LambdaExpressionDiscloser.disclose(new Comparator<Integer>() {
+		Comparator anonymousComparatorInstance= LambdaExpressionDiscloser.discloseWithComparator(new Comparator<Integer>() {
 			@Override public int compare(Integer o1, Integer o2) {
 				return 0;
 			}
 		});
-		Comparator namedComparatorInstance= LambdaExpressionDiscloser.disclose(new NamedComparator());
+		Comparator namedComparatorInstance= LambdaExpressionDiscloser.discloseWithComparator(new NamedIntegerComparator());
 		Assert.assertTrue(Comparator.class.isAssignableFrom(lambdaExpressionInstance.getClass()));
 		Assert.assertTrue(Comparator.class.isAssignableFrom(anonymousComparatorInstance.getClass()));
 		Assert.assertTrue(Comparator.class.isAssignableFrom(namedComparatorInstance.getClass()));
@@ -60,10 +60,16 @@ public class LambdaExpressionSyntaxesLearningTest {
 	}
 
 	@Test
+	public void yesNameDoesNotMatterOnlySignatureMatters(){
+
+	}
+
+	@Test
 	public void butMethodReferenceProvideMoreSyntacticSugar() {
-		Comparator<String> comparatorFromStringCompareToMethod = LambdaExpressionDiscloser.disclose(String::compareTo);
+		//with Class::instanceMethod
+		Comparator<String> comparatorFromStringCompareToMethod = LambdaExpressionDiscloser.discloseWithComparator(String::compareTo);
 		/*
-		The above is same as the below
+		The above is same as below.
 
 		Comparator<String> comparator = new Comparator<String>(){
 			public int compare(String s1, String s2){
@@ -71,21 +77,35 @@ public class LambdaExpressionSyntaxesLearningTest {
 			}
 		}
 		*/
+
+		//with instance::instanceMethod
+		NamedIntegerComparator comparator = new NamedIntegerComparator();
+		LambdaExpressionDiscloser.discloseWithComparator(comparator::compare);
+
+		//with Class::staticMethod : (o1, o2) -> retrun 0
+		LambdaExpressionDiscloser.discloseWithComparator(StaticIntegerCompareMethodProvider::compare);
 	}
 
 
 
 	public static class LambdaExpressionDiscloser{
-		public static <E> Comparator<E> disclose(Comparator<E> comparator){
+		public static <E> Comparator<E> discloseWithComparator(Comparator<E> comparator){
 			return comparator;
 		}
 
-		public static <E> Comparator<E> createComplareFrom(Comparator<E> comparator){
+		public static <E> Comparator<E> createCompareFrom(Comparator<E> comparator){
 			return comparator;
 		}
 	}
-	public static class NamedComparator implements Comparator<Integer>{
+
+	public static class NamedIntegerComparator implements Comparator<Integer>{
 		@Override public int compare(Integer o1, Integer o2) {
+			return 0;
+		}
+	}
+
+	public static class StaticIntegerCompareMethodProvider {
+		public static int compare(Integer o1, Integer o2) {
 			return 0;
 		}
 	}

@@ -37,7 +37,7 @@ public class TaskRunner {
 
 	@PreDestroy
 	public void destroy() {
-		System.out.println("Clear taskRunner");
+		System.out.println("Start to clear taskRunner");
 		if (executor == null)
 			return;
 		if (executor.isShutdown())
@@ -50,7 +50,7 @@ public class TaskRunner {
 			} catch (InterruptedException ignore) {
 			}
 		}
-		System.out.println("Cleared taskRunner");
+		System.out.println("Cleared all taskRunner");
 	}
 
 	public void process(int count) {
@@ -65,7 +65,7 @@ public class TaskRunner {
 					try {
 						Thread.sleep(100000);
 					} catch (InterruptedException e) {
-						System.out.println(format("<-<- a task(%s) has get interrupted", this));
+						System.out.println(format("<-<- a task(%s) has got interrupted", this));
 						return false;
 					}
 					System.out.println(format("<-<- a task(%s) has been done on %s", this));

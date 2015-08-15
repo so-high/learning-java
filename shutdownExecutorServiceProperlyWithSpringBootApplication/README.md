@@ -4,4 +4,4 @@
   - in a method annotated with @PostConstruct
     - creates CompletionService with an ExecutorService
   - in a method annotated with @PreDestroy
-    - makes a shutdown call to the ExecutorService made in the method annotated with CompletionService
+    - makes a shutdown call to the ExecutorService created in the method with @PostConstruct

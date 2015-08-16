@@ -1,4 +1,3 @@
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,101 +12,92 @@ import static java.lang.Thread.*;
  * Created by colin on 15. 8. 15..
  */
 public class LambdaExpressionSyntaxesLearningTest {
-	private List<String> strings;
-	private List<Integer> integers;
+	private List<String> listOfStrings;
 	@Before
 	public void prepare(){
-		strings = Arrays.asList(new String[]{"1","21","321","4321","54321"});
-		integers = Arrays.asList(new Integer[]{1,2,3,4,5});
+		listOfStrings = Arrays.asList(new String[]{"1","21","321","4321","54321"});
 	}
 
 	@Test
-	public void parameterTypesCanBeInferredByDefinition(){
-		strings.sort((first, second) -> Integer.compare(first.length(), second.length()));
+	public void parameterTypesCanBeInferredInContext(){
+		listOfStrings.sort((first, second) -> Integer.compare(first.length(), second.length()));
 	}
 
 	@Test
-	public void parenthesisCanBeOmittedWhenRequireOnlyOneParameter(){
-		strings.stream().map(anElement -> anElement.toUpperCase());
+	public void parenthesisCanBeOmittedWhenLambdaBlockRequiresOnlyOneParameter(){
+		listOfStrings.stream().map(anElement -> anElement.toUpperCase());
 	}
 
 	@Test
 	public void isLambdaExpressionJustSyntacticSugarForAnonymousImplementation(){
-		Comparator lambdaExpressionInstance = LambdaExpressionDiscloser.discloseWithComparator(
-			(Integer first, Integer second) -> Integer.compare(first, second));
-		Comparator anonymousComparatorInstance= LambdaExpressionDiscloser.discloseWithComparator(new Comparator<Integer>() {
-			@Override public int compare(Integer o1, Integer o2) {
-				return 0;
+		// List.sort only accepts Comparator Instance
+
+		Comparator<String> expectComparatorInstanceAlso = Discloser.acceptComparatorAndRuturnIt((first, second) -> 0);
+		Comparator<String> expectComparatorInstance = Discloser.acceptComparatorAndRuturnIt(new Comparator<String>() {
+			@Override public int compare(String first, String second) {
+				return first.compareTo(second);
 			}
 		});
-		Comparator namedComparatorInstance= LambdaExpressionDiscloser.discloseWithComparator(new NamedIntegerComparator());
-		Assert.assertTrue(Comparator.class.isAssignableFrom(lambdaExpressionInstance.getClass()));
-		Assert.assertTrue(Comparator.class.isAssignableFrom(anonymousComparatorInstance.getClass()));
-		Assert.assertTrue(Comparator.class.isAssignableFrom(namedComparatorInstance.getClass()));
 	}
 
 	@Test
-	public void seemsYesSoNaturallyHaveToHaveConsistentMethodSignature(){
+	public void feelLikeYesButDoMore(){
+		/*
+			Just from a lambda expression conforming Comparator.compare() method signature,
+			we can get Comparator instance.
+		*/
+		Comparator<String> expectComparatorMadeDirectlyFromLambdaExpression = (first, second) -> 0;
+
+		/*
+			and naturally, a lambda expressions have to correspond to a signature of single abstract method
+			which is to be implemented from it.
+		 */
 		Runnable runnableFromLambda = () -> {
 			try {
 				sleep(10);
 			} catch (InterruptedException e) {
-				//Can't throw Checked Exception as Runnable::run method doesn't have throws definition.
+				//Can't throw any checked exceptions as Runnable::run method doesn't have throws definition.
 			}
 		};
-
-		Callable<?> callableFromLambda = () -> {Thread.sleep(10);return null;};
+		Callable<?> callableFromLambda = () -> {Thread.sleep(10); return null;};
 	}
 
 	@Test
-	public void yesNameDoesNotMatterOnlySignatureMatters(){
+	public void methodReferenceDoMore() {
+		//with instance::instanceMethod : we can just reuse code
+		listOfStrings.sort((new ImNotAClassImplementingComparator<>())::accept2ArgsAndReturn0);
 
-	}
+		//with Class::staticMethod : we can just reuse code
+		listOfStrings.sort(ImNotAClassImplementingComparator::accept2ArgsAndReturn0Static);
 
-	@Test
-	public void butMethodReferenceProvideMoreSyntacticSugar() {
-		//with Class::instanceMethod
-		Comparator<String> comparatorFromStringCompareToMethod = LambdaExpressionDiscloser.discloseWithComparator(String::compareTo);
 		/*
-		The above is same as below.
-
-		Comparator<String> comparator = new Comparator<String>(){
-			public int compare(String s1, String s2){
-				return s1.compareTo(s2);
-			}
-		}
+		with Class::instanceMethod,
+			- allow to re-use pre-defined methods
+			- gets boiler plate code less
+			- besides, make the implementation and binding code less
 		*/
-
-		//with instance::instanceMethod
-		NamedIntegerComparator comparator = new NamedIntegerComparator();
-		LambdaExpressionDiscloser.discloseWithComparator(comparator::compare);
-
-		//with Class::staticMethod : (o1, o2) -> retrun 0
-		LambdaExpressionDiscloser.discloseWithComparator(StaticIntegerCompareMethodProvider::compare);
+		listOfStrings.sort(String::compareTo);
+		// the above is same as below
+		listOfStrings.sort(new Comparator<String>() {
+			@Override public int compare(String o1, String o2) {
+				return o1.compareTo(o2);
+			}
+		});
 	}
 
 
-
-	public static class LambdaExpressionDiscloser{
-		public static <E> Comparator<E> discloseWithComparator(Comparator<E> comparator){
-			return comparator;
-		}
-
-		public static <E> Comparator<E> createCompareFrom(Comparator<E> comparator){
+	public static class Discloser {
+		public static <E> Comparator<E> acceptComparatorAndRuturnIt(Comparator<E> comparator){
 			return comparator;
 		}
 	}
 
-	public static class NamedIntegerComparator implements Comparator<Integer>{
-		@Override public int compare(Integer o1, Integer o2) {
+	public static class ImNotAClassImplementingComparator<T>{
+		public static <E> int accept2ArgsAndReturn0Static(E o1, E o2) {
+			return 0;
+		}
+		public int accept2ArgsAndReturn0(T o1, T o2) {
 			return 0;
 		}
 	}
-
-	public static class StaticIntegerCompareMethodProvider {
-		public static int compare(Integer o1, Integer o2) {
-			return 0;
-		}
-	}
-
 }
